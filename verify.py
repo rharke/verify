@@ -8,6 +8,7 @@ See LICENSE file for details
 import os, hashlib, mmap, sys
 
 DATABASE_FILE = 'checksums'
+VERIFY_DIRECTORY = 'data'
 VERIFY_EXISTING = True
 ADD_NEW = True
 REMOVE_DELETED = False
@@ -39,7 +40,7 @@ verified = 0
 added = 0
 removed = 0
 
-for dirpath, dirnames, filenames in os.walk('data'):
+for dirpath, dirnames, filenames in os.walk(VERIFY_DIRECTORY):
     for filename in filenames:
         filepath =  os.path.join(dirpath, filename)
         if filepath in database:
