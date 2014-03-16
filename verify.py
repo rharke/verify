@@ -19,7 +19,7 @@ def md5sum(filename):
         s = os.fstat(f.fileno()).st_size
         hasher = hashlib.md5()
         hasher.update(mmap.mmap(f.fileno(), s))
-        return hasher.hexdigest().lower()
+        return hasher.hexdigest()
 
 def log(message):
     if VERBOSE:
@@ -30,7 +30,7 @@ if os.path.exists(DATABASE_FILE):
     with open(DATABASE_FILE, 'r+a') as sumfile:
         for l in sumfile:
             entry = l.rstrip('\r\n')
-            checksum = entry[:32].lower()
+            checksum = entry[:32]
             filepath = entry[34:]
             database[filepath] = [checksum, False]
 
