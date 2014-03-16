@@ -8,6 +8,7 @@ See LICENSE file for details
 import os, hashlib, mmap, sys
 
 DATABASE_FILE = 'checksums'
+VERIFY_EXISTING = True
 ADD_NEW = True
 REMOVE_DELETED = False
 UPDATE_CHANGED = False
@@ -43,18 +44,21 @@ for dirpath, dirnames, filenames in os.walk('data'):
         filepath =  os.path.join(dirpath, filename)
         if filepath in database:
             log("Existing file %s... " % (filepath,))
-            database[filepath][1] = True
-            checksum = md5sum(filepath)
-            if checksum != database[filepath][0]:
-                if UPDATE_CHANGED:
-                    log("updated\n")
-                    database[filepath][0] = checksum
+            if VERIFY_EXISTING:
+                checksum = md5sum(filepath)
+                if checksum != database[filepath][0]:
+                    if UPDATE_CHANGED:
+                        log("updated\n")
+                        database[filepath][0] = checksum
+                    else:
+                        log("failed\n")
+                    failed += 1
                 else:
-                    log("failed\n")
-                failed += 1
+                    log("verified\n")
+                    verified += 1
             else:
-                log("verified\n")
-                verified += 1
+                log("skipped\n")
+            database[filepath][1] = True
         else:
             log("New file %s... " % (filepath,))
             if ADD_NEW:
