@@ -15,7 +15,7 @@ UPDATE_CHANGED = False
 VERBOSE = True
 
 def md5sum(filename):
-    with open(filename, "r+b") as f:
+    with open(filename, 'r+b') as f:
         s = os.fstat(f.fileno()).st_size
         hasher = hashlib.md5()
         hasher.update(mmap.mmap(f.fileno(), s))
@@ -43,41 +43,41 @@ for dirpath, dirnames, filenames in os.walk('data'):
     for filename in filenames:
         filepath =  os.path.join(dirpath, filename)
         if filepath in database:
-            log("Existing file %s... " % (filepath,))
+            log('Existing file %s... ' % (filepath,))
             if VERIFY_EXISTING:
                 checksum = md5sum(filepath)
                 if checksum != database[filepath][0]:
                     if UPDATE_CHANGED:
-                        log("updated\n")
+                        log('updated\n')
                         database[filepath][0] = checksum
                     else:
-                        log("failed\n")
+                        log('failed\n')
                     failed += 1
                 else:
-                    log("verified\n")
+                    log('verified\n')
                     verified += 1
             else:
-                log("skipped\n")
+                log('skipped\n')
             database[filepath][1] = True
         else:
-            log("New file %s... " % (filepath,))
+            log('New file %s... ' % (filepath,))
             if ADD_NEW:
                 checksum = md5sum(filepath)
-                log("computed\n")
+                log('computed\n')
                 database[filepath] = [checksum, True]
             else:
-                log("skipped\n")
+                log('skipped\n')
             added += 1
 
 todelete = []  # do not delete immediately because we are iterating
 for filepath in database:
     if not database[filepath][1]:
-        log("Deleted file %s... " % (filepath,))
+        log('Deleted file %s... ' % (filepath,))
         if REMOVE_DELETED:
             todelete.append(filepath)
-            log("removed\n")
+            log('removed\n')
         else:
-            log("skipped\n")
+            log('skipped\n')
         removed += 1
 
 for filepath in todelete:
@@ -90,10 +90,10 @@ del_update = ((removed > 0) and REMOVE_DELETED)
 if fail_update or add_update or del_update:
     with open(DATABASE_FILE, 'w+a') as sumfile:
         for filepath in database:
-            sumfile.write("%s  %s\n" % (database[filepath][0], filepath))
+            sumfile.write('%s  %s\n' % (database[filepath][0], filepath))
 
-log("\nSummary:\n")
-log("    %d verified\n" % (verified,))
-log("    %d failed%s\n" % (failed, " (database updated)" if fail_update else ""))
-log("    %d new files%s\n" % (added, " (database updated)" if add_update else ""))
-log("    %d deleted files%s\n" % (removed, " (database updated)" if del_update else ""))
+log('\nSummary:\n')
+log('    %d verified\n' % (verified,))
+log('    %d failed%s\n' % (failed, ' (database updated)' if fail_update else ''))
+log('    %d new files%s\n' % (added, ' (database updated)' if add_update else ''))
+log('    %d deleted files%s\n' % (removed, ' (database updated)' if del_update else ''))
