@@ -11,7 +11,8 @@ def md5sum(filename):
     with open(filename, 'r+b') as f:
         s = os.fstat(f.fileno()).st_size
         hasher = hashlib.md5()
-        hasher.update(mmap.mmap(f.fileno(), s))
+        if s > 0:
+            hasher.update(mmap.mmap(f.fileno(), s))
         return hasher.hexdigest()
 
 def main():
