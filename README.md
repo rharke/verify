@@ -10,9 +10,11 @@ My personal use case is to keep checksums for my large collection of media files
 ## Usage
 
 ```
-usage: verify [-h] [--db-file DATABASE_FILE] [--no-verify-existing]
-              [--no-add-new] [--remove-deleted] [--update-changed] [--verbose]
-              VERIFY_DIRECTORY
+usage: verify.py [-h] [--db-file DATABASE_FILE]
+                 [--ignorelist-file IGNORELIST_FILE] [--no-verify-existing]
+                 [--no-add-new] [--remove-deleted] [--update-changed]
+                 [--clean-ignored] [--verbose]
+                 VERIFY_DIRECTORY
 
 Verify a tree of files
 
@@ -23,11 +25,16 @@ optional arguments:
   -h, --help            show this help message and exit
   --db-file DATABASE_FILE, -d DATABASE_FILE
                         file from/in which to read/store the checksum database
+  --ignorelist-file IGNORELIST_FILE
+                        file containing a list of shell-style patterns to
+                        ignore
   --no-verify-existing  do not verify existing files against the database
   --no-add-new          do not add new files to the database
   --remove-deleted      remove deleted files from the database
   --update-changed      update the database with the new checksum for files
                         that do not pass verification
+  --clean-ignored       remove files from the database that match an ignore
+                        pattern (to clean up a crufty database)
   --verbose, -v         display status messages for all operations instead of
                         just exceptional conditions
 ```
@@ -41,3 +48,4 @@ The database is stored in a simple format compatible with md5sum. Each line is t
 ## Issues / to-do
 
 * There is no way to run against a subset of files. If a file has been updated, a re-run with `--update-changed` will need to rescan all files (which is actually a race, since perhaps something else has gone wrong in the meantime).
+* The ignorelist does not support globstar syntax, which makes it difficult to precisely ignore files recursively. Mainly this is because Python does not natively support this syntax. It could be hacked in, but I haven't run into a pressing need for it yet. You can mostly hack around it (e.g. ignore both `.DS_Store` and `*/.DS_Store`).
