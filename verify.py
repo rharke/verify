@@ -92,10 +92,10 @@ class Verifier(object):
             if self.args.add_new:
                 checksum = md5sum(filepath)
                 self.vlog('added\n')
-                self.nvlog('New file %s added\n' % (filepath,))
                 self.database[filepath] = [checksum, True]
             else:
                 self.vlog('skipped\n')
+            self.nvlog('New file %s added\n' % (filepath,))
             self.added += 1
 
     def check_database_file(self, filepath):
@@ -104,9 +104,9 @@ class Verifier(object):
             if self.args.remove_deleted:
                 del self.database[filepath]
                 self.vlog('removed\n')
-                self.nvlog('Deleted file %s removed\n' % (filepath,))
             else:
                 self.vlog('skipped\n')
+            self.nvlog('Deleted file %s removed\n' % (filepath,))
             self.removed += 1
 
     def run(self):
