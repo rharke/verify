@@ -67,40 +67,44 @@ class Verifier(object):
 
     def check_local_file(self, filepath):
         if filepath in self.database:
-            self.log('Existing file %s... ' % (filepath,))
+            self.vlog('Existing file %s... ' % (filepath,))
             if self.args.verify_existing:
                 checksum = md5sum(filepath)
                 if checksum != self.database[filepath][0]:
                     if self.args.update_changed:
-                        self.log('updated\n')
+                        self.vlog('updated\n')
+                        self.nvlog('Existing file %s updated\n' % (filepath,))
                         self.database[filepath][0] = checksum
                     else:
-                        self.log('failed\n')
+                        self.vlog('failed\n')
+                        self.nvlog('Existing file %s failed\n' % (filepath,))
                     self.failed += 1
                 else:
-                    self.log('verified\n')
+                    self.vlog('verified\n')
                     self.verified += 1
             else:
-                self.log('skipped\n')
+                self.vlog('skipped\n')
             self.database[filepath][1] = True
         else:
-            self.log('New file %s... ' % (filepath,))
+            self.vlog('New file %s... ' % (filepath,))
             if self.args.add_new:
                 checksum = md5sum(filepath)
-                self.log('computed\n')
+                self.vlog('added\n')
+                self.nvlog('New file %s added\n' % (filepath,))
                 self.database[filepath] = [checksum, True]
             else:
-                self.log('skipped\n')
+                self.vlog('skipped\n')
             self.added += 1
 
     def check_database_file(self, filepath):
         if not self.database[filepath][1]:
-            self.log('Deleted file %s... ' % (filepath,))
+            self.vlog('Deleted file %s... ' % (filepath,))
             if self.args.remove_deleted:
                 del self.database[filepath]
-                self.log('removed\n')
+                self.vlog('removed\n')
+                self.nvlog('Deleted file %s removed\n' % (filepath,))
             else:
-                self.log('skipped\n')
+                self.vlog('skipped\n')
             self.removed += 1
 
     def run(self):
@@ -128,9 +132,16 @@ class Verifier(object):
         self.log('    %d new files%s\n' % (self.added, ' (database updated)' if add_update else ''))
         self.log('    %d deleted files%s\n' % (self.removed, ' (database updated)' if del_update else ''))
 
-    def log(self, message):
+    def vlog(self, message):
         if self.args.verbose:
             sys.stderr.write(message)
+
+    def nvlog(self, message):
+        if not self.args.verbose:
+            sys.stderr.write(message)
+
+    def log(self, message):
+        sys.stderr.write(message)
 
 if __name__ == "__main__":
     main()
