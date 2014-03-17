@@ -45,6 +45,8 @@ If files have been changed or removed, the idea is that you would manually valid
 
 The database is stored in a simple format compatible with md5sum. Each line is the lowercase MD5 hex digest (32 characters), followed by two spaces, followed by the file path. In a pinch, you can use `md5sum -c` to check files against the database.
 
+*Verify* should run with both Python 2.7 and 3.x (I've tested it with 2.7 and 3.2).
+
 ## Issues / to-do
 
 * There is no way to run against a subset of files. If a file has been updated, a re-run with `--update-changed` will need to rescan all files (which is actually a race, since perhaps something else has gone wrong in the meantime).
