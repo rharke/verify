@@ -61,9 +61,10 @@ class Verifier(object):
             with open(self.args.database_file, 'rt') as sumfile:
                 for l in sumfile:
                     entry = l.rstrip('\r\n')
-                    checksum = entry[:32]
-                    filepath = entry[34:]
-                    self.database[filepath] = [checksum, False]
+                    if len(entry) > 0:
+                        checksum = entry[:32]
+                        filepath = entry[34:]
+                        self.database[filepath] = [checksum, False]
 
     def write_database(self):
         with open(self.args.database_file, 'wt') as sumfile:
