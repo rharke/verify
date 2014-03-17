@@ -29,13 +29,11 @@ def main():
                         help='remove deleted files from the database')
     parser.add_argument('--update-changed', dest='update_changed', action='store_true',
                         help='update the database with the new checksum for files that do not pass verification')
-    #parser.add_argument('--verbose', '-v', dest='verbose', action='store_true',
-    #                    help='display status messages for all operations instead of just exceptional conditions')
-    parser.add_argument('--no-verbose', dest='verbose', action='store_false',
-                        help='display status only for exceptional conditions')
+    parser.add_argument('--verbose', '-v', dest='verbose', action='store_true',
+                        help='display status messages for all operations instead of just exceptional conditions')
 
     parser.set_defaults(database_file='checksums', verify_existing=True, add_new=True,
-                        remove_deleted=False, update_changed=False, verbose=True)
+                        remove_deleted=False, update_changed=False, verbose=False)
 
     args = parser.parse_args()
 
