@@ -137,7 +137,7 @@ class Verifier(object):
                     self.check_local_file(filepath)
 
         # NB: iterate over keys so we can delete while iterating
-        for filepath in self.database.keys():
+        for filepath in list(self.database.keys()):
             if not self.match_ignorelist(filepath):
                 self.check_database_file(filepath)
 
