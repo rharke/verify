@@ -49,3 +49,4 @@ The database is stored in a simple format compatible with md5sum. Each line is t
 
 * There is no way to run against a subset of files. If a file has been updated, a re-run with `--update-changed` will need to rescan all files (which is actually a race, since perhaps something else has gone wrong in the meantime).
 * The ignorelist does not support globstar syntax, which makes it difficult to precisely ignore files recursively. Mainly this is because Python does not natively support this syntax. It could be hacked in, but I haven't run into a pressing need for it yet. You can mostly hack around it (e.g. ignore both `.DS_Store` and `*/.DS_Store`).
+* Sharing databases between Windows and Unix will probably result in excitement because the path separators don't match. This could be fixed easily; I just haven't needed it yet...
