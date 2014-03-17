@@ -72,11 +72,12 @@ class Verifier(object):
                 sumfile.write('%s  %s\n' % (self.database[filepath][0], filepath))
 
     def read_ignorelist(self):
-        with open(self.args.ignorelist_file, 'rt') as ignorelistfile:
-            for l in ignorelistfile:
-                entry = l.rstrip('\r\n')
-                if len(entry) > 0:
-                    self.ignorelist.append(entry)
+        if self.args.ignorelist_file is not None:
+            with open(self.args.ignorelist_file, 'rt') as ignorelistfile:
+                for l in ignorelistfile:
+                    entry = l.rstrip('\r\n')
+                    if len(entry) > 0:
+                        self.ignorelist.append(entry)
 
     def match_ignorelist(self, filepath):
         for entry in self.ignorelist:
