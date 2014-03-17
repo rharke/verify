@@ -34,11 +34,14 @@ def parse_args(args=None):
                         help='remove deleted files from the database')
     parser.add_argument('--update-changed', dest='update_changed', action='store_true',
                         help='update the database with the new checksum for files that do not pass verification')
+    parser.add_argument('--clean-ignored', dest='clean_ignored', action='store_true',
+                        help='remove files from the database that match an ignore pattern (to clean up a crufty database)')
     parser.add_argument('--verbose', '-v', dest='verbose', action='store_true',
                         help='display status messages for all operations instead of just exceptional conditions')
 
     parser.set_defaults(database_file='checksums', ignorelist_file=None, verify_existing=True,
-                        add_new=True, remove_deleted=False, update_changed=False, verbose=False)
+                        add_new=True, remove_deleted=False, update_changed=False,
+                        clean_ignored=False, verbose=False)
 
     return parser.parse_args()
 
@@ -55,6 +58,7 @@ class Verifier(object):
         self.verified = 0
         self.added = 0
         self.removed = 0
+        self.ignored = 0
 
     def read_database(self):
         if os.path.exists(self.args.database_file):
@@ -141,12 +145,18 @@ class Verifier(object):
         for filepath in list(self.database.keys()):
             if not self.match_ignorelist(filepath):
                 self.check_database_file(filepath)
+            else:
+                if self.args.clean_ignored:
+                    del self.database[filepath]
+                    self.log('Cleaned ignored file %s from database\n' % (filepath,))
+                self.ignored += 1
 
         fail_update = (self.failed > 0) and self.args.update_changed
         add_update = (self.added > 0) and self.args.add_new
         del_update = (self.removed > 0) and self.args.remove_deleted
+        clean_update = (self.ignored > 0) and self.args.clean_ignored
 
-        if fail_update or add_update or del_update:
+        if fail_update or add_update or del_update or clean_update:
             self.write_database()
 
         self.log('\nSummary:\n')
@@ -154,6 +164,7 @@ class Verifier(object):
         self.log('    %d failed%s\n' % (self.failed, ' (database updated)' if fail_update else ''))
         self.log('    %d new files%s\n' % (self.added, ' (database updated)' if add_update else ''))
         self.log('    %d deleted files%s\n' % (self.removed, ' (database updated)' if del_update else ''))
+        self.log('    %d ignored files%s\n' % (self.ignored, ' (database updated)' if clean_update else ''))
 
     def vlog(self, message):
         if self.args.verbose:
