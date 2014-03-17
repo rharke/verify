@@ -15,7 +15,10 @@ def md5sum(filename):
             hasher.update(mmap.mmap(f.fileno(), s))
         return hasher.hexdigest()
 
-def main():
+def parse_args(args=None):
+    if args is None:
+        args = sys.argv
+
     parser = argparse.ArgumentParser(description='Verify a tree of files')
     parser.add_argument('verify_directory', metavar='VERIFY_DIRECTORY', type=str,
                         help='directory containing the files to verify')
@@ -35,9 +38,10 @@ def main():
     parser.set_defaults(database_file='checksums', verify_existing=True, add_new=True,
                         remove_deleted=False, update_changed=False, verbose=False)
 
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    Verifier(args).run()
+def main():
+    Verifier(parse_args()).run()
 
 class Verifier(object):
     def __init__(self, args):
