@@ -8,11 +8,11 @@ See LICENSE file for details
 import os, hashlib, mmap, sys, argparse
 
 def md5sum(filename):
-    with open(filename, 'r+b') as f:
+    with open(filename, 'rb') as f:
         s = os.fstat(f.fileno()).st_size
         hasher = hashlib.md5()
         if s > 0:
-            hasher.update(mmap.mmap(f.fileno(), s))
+            hasher.update(mmap.mmap(f.fileno(), s, prot=mmap.PROT_READ))
         return hasher.hexdigest()
 
 def parse_args(args=None):
@@ -55,7 +55,7 @@ class Verifier(object):
 
     def read_database(self):
         if os.path.exists(self.args.database_file):
-            with open(self.args.database_file, 'r+a') as sumfile:
+            with open(self.args.database_file, 'rt') as sumfile:
                 for l in sumfile:
                     entry = l.rstrip('\r\n')
                     checksum = entry[:32]
@@ -63,7 +63,7 @@ class Verifier(object):
                     self.database[filepath] = [checksum, False]
 
     def write_database(self):
-        with open(self.args.database_file, 'w+a') as sumfile:
+        with open(self.args.database_file, 'wt') as sumfile:
             for filepath in self.database:
                 sumfile.write('%s  %s\n' % (self.database[filepath][0], filepath))
 
