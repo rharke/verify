@@ -5,7 +5,7 @@ Copyright (c) 2014 Ranger Harke
 See LICENSE file for details
 """
 
-import os, hashlib, mmap, sys, argparse
+import os, hashlib, mmap, sys, argparse, fnmatch
 
 def md5sum(filename):
     with open(filename, 'rb') as f:
@@ -24,6 +24,8 @@ def parse_args(args=None):
                         help='directory containing the files to verify')
     parser.add_argument('--db-file', '-d', metavar='DATABASE_FILE', type=str, dest='database_file',
                         help='file from/in which to read/store the checksum database')
+    parser.add_argument('--ignorelist-file', metavar='IGNORELIST_FILE', type=str, dest='ignorelist_file',
+                        help='file containing a list of shell-style patterns to ignore')
     parser.add_argument('--no-verify-existing', dest='verify_existing', action='store_false',
                         help='do not verify existing files against the database')
     parser.add_argument('--no-add-new', dest='add_new', action='store_false',
@@ -35,8 +37,8 @@ def parse_args(args=None):
     parser.add_argument('--verbose', '-v', dest='verbose', action='store_true',
                         help='display status messages for all operations instead of just exceptional conditions')
 
-    parser.set_defaults(database_file='checksums', verify_existing=True, add_new=True,
-                        remove_deleted=False, update_changed=False, verbose=False)
+    parser.set_defaults(database_file='checksums', ignorelist_file=None, verify_existing=True,
+                        add_new=True, remove_deleted=False, update_changed=False, verbose=False)
 
     return parser.parse_args()
 
@@ -47,6 +49,7 @@ class Verifier(object):
     def __init__(self, args):
         self.args = args
         self.database = {}
+        self.ignorelist = []
 
         self.failed = 0
         self.verified = 0
@@ -66,6 +69,19 @@ class Verifier(object):
         with open(self.args.database_file, 'wt') as sumfile:
             for filepath in self.database:
                 sumfile.write('%s  %s\n' % (self.database[filepath][0], filepath))
+
+    def read_ignorelist(self):
+        with open(self.args.ignorelist_file, 'rt') as ignorelistfile:
+            for l in ignorelistfile:
+                entry = l.rstrip('\r\n')
+                if len(entry) > 0:
+                    self.ignorelist.append(entry)
+
+    def match_ignorelist(self, filepath):
+        for entry in self.ignorelist:
+            if fnmatch.fnmatch(filepath, entry):
+                return True
+        return False
 
     def check_local_file(self, filepath):
         if filepath in self.database:
@@ -111,15 +127,18 @@ class Verifier(object):
 
     def run(self):
         self.read_database()
+        self.read_ignorelist()
 
         for dirpath, dirnames, filenames in os.walk(self.args.verify_directory):
             for filename in filenames:
                 filepath = os.path.join(dirpath, filename)
-                self.check_local_file(filepath)
+                if not self.match_ignorelist(filepath):
+                    self.check_local_file(filepath)
 
         # NB: iterate over keys so we can delete while iterating
         for filepath in self.database.keys():
-            self.check_database_file(filepath)
+            if not self.match_ignorelist(filepath):
+                self.check_database_file(filepath)
 
         fail_update = (self.failed > 0) and self.args.update_changed
         add_update = (self.added > 0) and self.args.add_new
