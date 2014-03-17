@@ -5,15 +5,7 @@ Copyright (c) 2014 Ranger Harke
 See LICENSE file for details
 """
 
-import os, hashlib, mmap, sys
-
-DATABASE_FILE = 'checksums'
-VERIFY_DIRECTORY = 'data'
-VERIFY_EXISTING = True
-ADD_NEW = True
-REMOVE_DELETED = False
-UPDATE_CHANGED = False
-VERBOSE = True
+import os, hashlib, mmap, sys, argparse
 
 def md5sum(filename):
     with open(filename, 'r+b') as f:
@@ -23,12 +15,35 @@ def md5sum(filename):
         return hasher.hexdigest()
 
 def log(message):
-    if VERBOSE:
+    if args.verbose:
         sys.stderr.write(message)
 
+parser = argparse.ArgumentParser(description='Verify a tree of files')
+parser.add_argument('verify_directory', metavar='VERIFY_DIRECTORY', type=str,
+                    help='directory containing the files to verify')
+parser.add_argument('--db-file', '-d', metavar='DATABASE_FILE', type=str, dest='database_file',
+                    help='file from/in which to read/store the checksum database')
+parser.add_argument('--no-verify-existing', dest='verify_existing', action='store_false',
+                    help='do not verify existing files against the database')
+parser.add_argument('--no-add-new', dest='add_new', action='store_false',
+                    help='do not add new files to the database')
+parser.add_argument('--remove-deleted', dest='remove_deleted', action='store_true',
+                    help='remove deleted files from the database')
+parser.add_argument('--update-changed', dest='update_changed', action='store_true',
+                    help='update the database with the new checksum for files that do not pass verification')
+#parser.add_argument('--verbose', '-v', dest='verbose', action='store_true',
+#                    help='display status messages for all operations instead of just exceptional conditions')
+parser.add_argument('--no-verbose', dest='verbose', action='store_false',
+                    help='display status only for exceptional conditions')
+
+parser.set_defaults(database_file='checksums', verify_existing=True, add_new=True,
+                    remove_deleted=False, update_changed=False, verbose=True)
+
+args = parser.parse_args()
+
 database = {}
-if os.path.exists(DATABASE_FILE):
-    with open(DATABASE_FILE, 'r+a') as sumfile:
+if os.path.exists(args.database_file):
+    with open(args.database_file, 'r+a') as sumfile:
         for l in sumfile:
             entry = l.rstrip('\r\n')
             checksum = entry[:32]
@@ -40,15 +55,15 @@ verified = 0
 added = 0
 removed = 0
 
-for dirpath, dirnames, filenames in os.walk(VERIFY_DIRECTORY):
+for dirpath, dirnames, filenames in os.walk(args.verify_directory):
     for filename in filenames:
         filepath =  os.path.join(dirpath, filename)
         if filepath in database:
             log('Existing file %s... ' % (filepath,))
-            if VERIFY_EXISTING:
+            if args.verify_existing:
                 checksum = md5sum(filepath)
                 if checksum != database[filepath][0]:
-                    if UPDATE_CHANGED:
+                    if args.update_changed:
                         log('updated\n')
                         database[filepath][0] = checksum
                     else:
@@ -62,7 +77,7 @@ for dirpath, dirnames, filenames in os.walk(VERIFY_DIRECTORY):
             database[filepath][1] = True
         else:
             log('New file %s... ' % (filepath,))
-            if ADD_NEW:
+            if args.add_new:
                 checksum = md5sum(filepath)
                 log('computed\n')
                 database[filepath] = [checksum, True]
@@ -74,7 +89,7 @@ todelete = []  # do not delete immediately because we are iterating
 for filepath in database:
     if not database[filepath][1]:
         log('Deleted file %s... ' % (filepath,))
-        if REMOVE_DELETED:
+        if args.remove_deleted:
             todelete.append(filepath)
             log('removed\n')
         else:
@@ -84,12 +99,12 @@ for filepath in database:
 for filepath in todelete:
     del database[filepath]
 
-fail_update = ((failed > 0) and UPDATE_CHANGED)
-add_update = ((added > 0) and ADD_NEW)
-del_update = ((removed > 0) and REMOVE_DELETED)
+fail_update = ((failed > 0) and args.update_changed)
+add_update = ((added > 0) and args.add_new)
+del_update = ((removed > 0) and args.remove_deleted)
 
 if fail_update or add_update or del_update:
-    with open(DATABASE_FILE, 'w+a') as sumfile:
+    with open(args.database_file, 'w+a') as sumfile:
         for filepath in database:
             sumfile.write('%s  %s\n' % (database[filepath][0], filepath))
 
