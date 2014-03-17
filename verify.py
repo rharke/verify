@@ -43,17 +43,25 @@ def main():
 class Verifier(object):
     def __init__(self, args):
         self.args = args
+        self.database = {}
 
-    def run(self):
-        database = {}
+    def read_database(self):
         if os.path.exists(self.args.database_file):
             with open(self.args.database_file, 'r+a') as sumfile:
                 for l in sumfile:
                     entry = l.rstrip('\r\n')
                     checksum = entry[:32]
                     filepath = entry[34:]
-                    database[filepath] = [checksum, False]
+                    self.database[filepath] = [checksum, False]
 
+    def write_database(self):
+        with open(self.args.database_file, 'w+a') as sumfile:
+            for filepath in self.database:
+                sumfile.write('%s  %s\n' % (self.database[filepath][0], filepath))
+
+    def run(self):
+        self.read_database()
+        
         failed = 0
         verified = 0
         added = 0
@@ -62,14 +70,14 @@ class Verifier(object):
         for dirpath, dirnames, filenames in os.walk(self.args.verify_directory):
             for filename in filenames:
                 filepath =  os.path.join(dirpath, filename)
-                if filepath in database:
+                if filepath in self.database:
                     self.log('Existing file %s... ' % (filepath,))
                     if self.args.verify_existing:
                         checksum = md5sum(filepath)
-                        if checksum != database[filepath][0]:
+                        if checksum != self.database[filepath][0]:
                             if self.args.update_changed:
                                 self.log('updated\n')
-                                database[filepath][0] = checksum
+                                self.database[filepath][0] = checksum
                             else:
                                 self.log('failed\n')
                             failed += 1
@@ -78,20 +86,20 @@ class Verifier(object):
                             verified += 1
                     else:
                         self.log('skipped\n')
-                    database[filepath][1] = True
+                    self.database[filepath][1] = True
                 else:
                     self.log('New file %s... ' % (filepath,))
                     if self.args.add_new:
                         checksum = md5sum(filepath)
                         self.log('computed\n')
-                        database[filepath] = [checksum, True]
+                        self.database[filepath] = [checksum, True]
                     else:
                         self.log('skipped\n')
                     added += 1
 
         todelete = []  # do not delete immediately because we are iterating
-        for filepath in database:
-            if not database[filepath][1]:
+        for filepath in self.database:
+            if not self.database[filepath][1]:
                 self.log('Deleted file %s... ' % (filepath,))
                 if self.args.remove_deleted:
                     todelete.append(filepath)
@@ -101,16 +109,14 @@ class Verifier(object):
                 removed += 1
 
         for filepath in todelete:
-            del database[filepath]
+            del self.database[filepath]
 
         fail_update = ((failed > 0) and self.args.update_changed)
         add_update = ((added > 0) and self.args.add_new)
         del_update = ((removed > 0) and self.args.remove_deleted)
 
         if fail_update or add_update or del_update:
-            with open(self.args.database_file, 'w+a') as sumfile:
-                for filepath in database:
-                    sumfile.write('%s  %s\n' % (database[filepath][0], filepath))
+            self.write_database()
 
         self.log('\nSummary:\n')
         self.log('    %d verified\n' % (verified,))
