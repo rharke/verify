@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Copyright (c) 2014 Ranger Harke
+Copyright (c) 2014-2015 Ranger Harke
 See LICENSE file for details
 """
 
@@ -169,13 +169,16 @@ class Verifier(object):
     def vlog(self, message):
         if self.args.verbose:
             sys.stderr.write(message)
+            sys.stderr.flush()
 
     def nvlog(self, message):
         if not self.args.verbose:
             sys.stderr.write(message)
+            sys.stderr.flush()
 
     def log(self, message):
         sys.stderr.write(message)
+        sys.stderr.flush()
 
 if __name__ == "__main__":
     main()
