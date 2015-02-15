@@ -7,14 +7,6 @@ See LICENSE file for details
 
 import os, hashlib, mmap, sys, argparse, fnmatch
 
-def md5sum(filename):
-    with open(filename, 'rb') as f:
-        s = os.fstat(f.fileno()).st_size
-        hasher = hashlib.md5()
-        if s > 0:
-            hasher.update(mmap.mmap(f.fileno(), s, prot=mmap.PROT_READ))
-        return hasher.hexdigest()
-
 def parse_args(args=None):
     if args is None:
         args = sys.argv
@@ -48,17 +40,11 @@ def parse_args(args=None):
 def main():
     Verifier(parse_args()).run()
 
-class Verifier(object):
+class VerifierBase(object):
     def __init__(self, args):
         self.args = args
         self.database = {}
         self.ignorelist = []
-
-        self.failed = 0
-        self.verified = 0
-        self.added = 0
-        self.removed = 0
-        self.ignored = 0
 
     def read_database(self):
         if os.path.exists(self.args.database_file):
@@ -89,11 +75,44 @@ class Verifier(object):
                 return True
         return False
 
+    def vlog(self, message):
+        if self.args.verbose:
+            sys.stderr.write(message)
+            sys.stderr.flush()
+
+    def nvlog(self, message):
+        if not self.args.verbose:
+            sys.stderr.write(message)
+            sys.stderr.flush()
+
+    def log(self, message):
+        sys.stderr.write(message)
+        sys.stderr.flush()
+
+    @staticmethod
+    def md5sum(filename):
+        with open(filename, 'rb') as f:
+            s = os.fstat(f.fileno()).st_size
+            hasher = hashlib.md5()
+            if s > 0:
+                hasher.update(mmap.mmap(f.fileno(), s, prot=mmap.PROT_READ))
+            return hasher.hexdigest()
+
+class Verifier(VerifierBase):
+    def __init__(self, args):
+        super(Verifier, self).__init__(args)
+
+        self.failed = 0
+        self.verified = 0
+        self.added = 0
+        self.removed = 0
+        self.ignored = 0
+
     def check_local_file(self, filepath):
         if filepath in self.database:
             self.vlog('Existing file %s... ' % (filepath,))
             if self.args.verify_existing:
-                checksum = md5sum(filepath)
+                checksum = self.md5sum(filepath)
                 if checksum != self.database[filepath][0]:
                     if self.args.update_changed:
                         self.vlog('updated\n')
@@ -112,7 +131,7 @@ class Verifier(object):
         else:
             self.vlog('New file %s... ' % (filepath,))
             if self.args.add_new:
-                checksum = md5sum(filepath)
+                checksum = self.md5sum(filepath)
                 self.vlog('added\n')
                 self.database[filepath] = [checksum, True]
             else:
@@ -165,20 +184,6 @@ class Verifier(object):
         self.log('    %d new files%s\n' % (self.added, ' (database updated)' if add_update else ''))
         self.log('    %d deleted files%s\n' % (self.removed, ' (database updated)' if del_update else ''))
         self.log('    %d ignored files%s\n' % (self.ignored, ' (database updated)' if clean_update else ''))
-
-    def vlog(self, message):
-        if self.args.verbose:
-            sys.stderr.write(message)
-            sys.stderr.flush()
-
-    def nvlog(self, message):
-        if not self.args.verbose:
-            sys.stderr.write(message)
-            sys.stderr.flush()
-
-    def log(self, message):
-        sys.stderr.write(message)
-        sys.stderr.flush()
 
 if __name__ == "__main__":
     main()
