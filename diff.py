@@ -66,7 +66,7 @@ class PatchGenerator(base.VerifierBase):
                         tarinfo = tarfile.TarInfo(str(self.taridx) + 'meta')
                         tarinfo.size = len(metafile.getvalue())
                         self.tarfile.addfile(tarinfo, metafile)
-                    self.tarfile.add(filepath, arcname=str(self.taridx) + 'data')
+                    self.tarfile.add(os.path.join(self.args.local_directory, filepath), arcname=str(self.taridx) + 'data')
                     self.taridx += 1
                     self.vlog('modified\n')
                     self.nvlog('Existing file %s changed\n' % (filepath,))
@@ -84,7 +84,7 @@ class PatchGenerator(base.VerifierBase):
                     tarinfo = tarfile.TarInfo(str(self.taridx) + 'meta')
                     tarinfo.size = len(metafile.getvalue())
                     self.tarfile.addfile(tarinfo, metafile)
-                self.tarfile.add(filepath, arcname=str(self.taridx) + 'data')
+                self.tarfile.add(os.path.join(self.args.local_directory, filepath), arcname=str(self.taridx) + 'data')
                 self.taridx += 1
                 self.vlog('added\n')
                 self.nvlog('New file %s added\n' % (filepath,))
