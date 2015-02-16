@@ -59,7 +59,7 @@ class Verifier(base.VerifierBase):
         if filepath in self.database:
             self.vlog('Existing file %s... ' % (filepath,))
             if self.args.verify_existing:
-                checksum = self.md5sum(filepath)
+                checksum = self.md5sum(os.path.join(self.args.verify_directory, filepath))
                 if checksum != self.database[filepath][0]:
                     if self.args.update_changed:
                         self.vlog('updated\n')
@@ -78,7 +78,7 @@ class Verifier(base.VerifierBase):
         else:
             self.vlog('New file %s... ' % (filepath,))
             if self.args.add_new:
-                checksum = self.md5sum(filepath)
+                checksum = self.md5sum(os.path.join(self.args.verify_directory, filepath))
                 self.vlog('added\n')
                 self.database[filepath] = [checksum, True]
             else:
@@ -101,8 +101,9 @@ class Verifier(base.VerifierBase):
         for dirpath, dirnames, filenames in os.walk(self.args.verify_directory):
             for filename in filenames:
                 filepath = os.path.join(dirpath, filename)
-                if not self.match_ignorelist(filepath):
-                    self.check_local_file(filepath)
+                relpath = os.path.relpath(filepath, self.args.verify_directory)
+                if not self.match_ignorelist(relpath):
+                    self.check_local_file(relpath)
 
         # NB: iterate over keys so we can delete while iterating
         for filepath in list(self.database.keys()):
