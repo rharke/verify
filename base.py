@@ -10,23 +10,24 @@ import os, hashlib, mmap, sys, fnmatch
 class VerifierBase(object):
     def __init__(self, args):
         self.args = args
-        self.database = {}
         self.ignorelist = []
 
-    def read_database(self):
-        if os.path.exists(self.args.database_file):
-            with open(self.args.database_file, 'rt') as sumfile:
+    @staticmethod
+    def read_database(database_file, database_dict):
+        if os.path.exists(database_file):
+            with open(database_file, 'rt') as sumfile:
                 for l in sumfile:
                     entry = l.rstrip('\r\n')
                     if len(entry) > 0:
                         checksum = entry[:32]
                         filepath = entry[34:]
-                        self.database[filepath] = [checksum, False]
+                        database_dict[filepath] = [checksum, False]
 
-    def write_database(self):
-        with open(self.args.database_file, 'wt') as sumfile:
-            for filepath in self.database:
-                sumfile.write('%s  %s\n' % (self.database[filepath][0], filepath))
+    @staticmethod
+    def write_database(database_file, database_dict):
+        with open(database_file, 'wt') as sumfile:
+            for filepath in database_dict:
+                sumfile.write('%s  %s\n' % (database_dict[filepath][0], filepath))
 
     def read_ignorelist(self):
         if self.args.ignorelist_file is not None:

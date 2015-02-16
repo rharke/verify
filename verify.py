@@ -44,6 +44,8 @@ class Verifier(base.VerifierBase):
     def __init__(self, args):
         super(Verifier, self).__init__(args)
 
+        self.database = {}
+
         self.failed = 0
         self.verified = 0
         self.added = 0
@@ -93,7 +95,7 @@ class Verifier(base.VerifierBase):
             self.removed += 1
 
     def run(self):
-        self.read_database()
+        self.read_database(self.args.database_file, self.database)
         self.read_ignorelist()
 
         for dirpath, dirnames, filenames in os.walk(self.args.verify_directory):
@@ -118,7 +120,7 @@ class Verifier(base.VerifierBase):
         clean_update = (self.ignored > 0) and self.args.clean_ignored
 
         if fail_update or add_update or del_update or clean_update:
-            self.write_database()
+            self.write_database(self.args.database_file, self.database)
 
         self.log('\nSummary:\n')
         self.log('    %d verified\n' % (self.verified,))
