@@ -63,10 +63,10 @@ class PatchGenerator(base.VerifierBase):
                 if local_entry[0] != remote_entry[0]:
                     meta = ('replace\n' + filepath).encode('utf-8')
                     with io.BytesIO(meta) as metafile:
-                        tarinfo = tarfile.TarInfo(str(self.taridx) + 'meta')
+                        tarinfo = tarfile.TarInfo(str(self.taridx) + '/meta')
                         tarinfo.size = len(metafile.getvalue())
                         self.tarfile.addfile(tarinfo, metafile)
-                    self.tarfile.add(os.path.join(self.args.local_directory, filepath), arcname=str(self.taridx) + 'data')
+                    self.tarfile.add(os.path.join(self.args.local_directory, filepath), arcname=str(self.taridx) + '/data')
                     self.taridx += 1
                     self.vlog('modified\n')
                     self.nvlog('Existing file %s changed\n' % (filepath,))
@@ -81,10 +81,10 @@ class PatchGenerator(base.VerifierBase):
             if self.args.diff_new:
                 meta = ('add\n' + filepath).encode('utf-8')
                 with io.BytesIO(meta) as metafile:
-                    tarinfo = tarfile.TarInfo(str(self.taridx) + 'meta')
+                    tarinfo = tarfile.TarInfo(str(self.taridx) + '/meta')
                     tarinfo.size = len(metafile.getvalue())
                     self.tarfile.addfile(tarinfo, metafile)
-                self.tarfile.add(os.path.join(self.args.local_directory, filepath), arcname=str(self.taridx) + 'data')
+                self.tarfile.add(os.path.join(self.args.local_directory, filepath), arcname=str(self.taridx) + '/data')
                 self.taridx += 1
                 self.vlog('added\n')
                 self.nvlog('New file %s added\n' % (filepath,))
@@ -99,7 +99,7 @@ class PatchGenerator(base.VerifierBase):
             if self.args.diff_deleted:
                 meta = ('delete\n' + filepath).encode('utf-8')
                 with io.BytesIO(meta) as metafile:
-                    tarinfo = tarfile.TarInfo(str(self.taridx) + 'meta')
+                    tarinfo = tarfile.TarInfo(str(self.taridx) + '/meta')
                     tarinfo.size = len(metafile.getvalue())
                     self.tarfile.addfile(tarinfo, metafile)
                 self.taridx += 1
