@@ -52,6 +52,9 @@ class Verifier(base.VerifierBase):
         self.removed = 0
         self.ignored = 0
 
+        self.read_database(self.args.database_file, self.database)
+        self.read_ignorelist()
+
     def check_local_file(self, filepath):
         if filepath in self.database:
             self.vlog('Existing file %s... ' % (filepath,))
@@ -95,9 +98,6 @@ class Verifier(base.VerifierBase):
             self.removed += 1
 
     def run(self):
-        self.read_database(self.args.database_file, self.database)
-        self.read_ignorelist()
-
         for dirpath, dirnames, filenames in os.walk(self.args.verify_directory):
             for filename in filenames:
                 filepath = os.path.join(dirpath, filename)
